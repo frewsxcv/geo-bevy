@@ -3,9 +3,12 @@ name = "geo-bevy"
 version = "0.1.0"
 authors = ["Corey Farwell <coreyf@rwell.org>"]
 edition = "2021"
+repository = "https://github.com/frewsxcv/geo-bevy"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 bevy_log = "0.9"
 bevy_render = "0.9"
 bevy-earcutr = "0.7"
 geo = "0.23"
+
