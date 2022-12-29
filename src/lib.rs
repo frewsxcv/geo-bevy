@@ -13,8 +13,9 @@ mod line_string;
 mod point;
 
 pub enum PreparedMesh {
-    PolygonAndLineString { mesh: Mesh, color: Color },
     Point(Vec<geo::Point>),
+    LineString { mesh: Mesh, color: Color },
+    Polygon { mesh: Mesh, color: Color },
 }
 
 type Vertex = [f32; 3]; // [x, y, z]
@@ -76,7 +77,7 @@ pub fn build_bevy_meshes<G: BuildBevyMeshes>(
             ctx.line_string_mesh_builder.build(color),
             ctx.polygon_mesh_builder
                 .build()
-                .map(|mesh| PreparedMesh::PolygonAndLineString { mesh, color }),
+                .map(|mesh| PreparedMesh::Polygon { mesh, color }),
             ctx.polygon_border_mesh_builder
                 .build(bevy_render::color::Color::BLACK),
         ]
