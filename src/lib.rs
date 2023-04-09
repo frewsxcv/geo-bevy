@@ -20,6 +20,25 @@ pub enum PreparedMesh {
 
 type Vertex = [f32; 3]; // [x, y, z]
 
+fn build_mesh_from_vertices(
+    primitive_topology: bevy_render::render_resource::PrimitiveTopology,
+    vertices: Vec<Vertex>,
+    indices: Vec<u32>,
+) -> Mesh {
+    let num_vertices = vertices.len();
+    let mut mesh = Mesh::new(primitive_topology);
+    mesh.set_indices(Some(bevy_render::mesh::Indices::U32(indices)));
+    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vertices);
+
+    let normals = vec![[0.0, 0.0, 0.0]; num_vertices];
+    let uvs = vec![[0.0, 0.0]; num_vertices];
+
+    mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
+
+    mesh
+}
+
 #[derive(Default)]
 pub struct BuildBevyMeshesContext {
     point_mesh_builder: point::PointMeshBuilder,
@@ -172,23 +191,4 @@ impl BuildBevyMeshes for geo::GeometryCollection {
         }
         Ok(())
     }
-}
-
-fn build_mesh_from_vertices(
-    primitive_topology: bevy_render::render_resource::PrimitiveTopology,
-    vertices: Vec<Vertex>,
-    indices: Vec<u32>,
-) -> Mesh {
-    let num_vertices = vertices.len();
-    let mut mesh = Mesh::new(primitive_topology);
-    mesh.set_indices(Some(bevy_render::mesh::Indices::U32(indices)));
-    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vertices);
-
-    let normals = vec![[0.0, 0.0, 0.0]; num_vertices];
-    let uvs = vec![[0.0, 0.0]; num_vertices];
-
-    mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
-    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
-
-    mesh
 }
