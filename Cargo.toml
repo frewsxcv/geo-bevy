@@ -10,6 +10,5 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 bevy_log = "0.9"
 bevy_render = "0.9"
-bevy-earcutr = "0.8"
-geo = "0.23"
+geo = { git = "https://github.com/georust/geo.git", branch = "frewsxcv/triangulate" }
 

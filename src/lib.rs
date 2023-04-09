@@ -6,11 +6,11 @@
 )]
 
 use bevy_render::prelude::*;
-use geo::algorithm::coords_iter::CoordsIter;
 use std::{error, num};
 
 mod line_string;
 mod point;
+mod polygon;
 
 pub enum PreparedMesh {
     Point(Vec<geo::Point>),
@@ -20,76 +20,40 @@ pub enum PreparedMesh {
 
 type Vertex = [f32; 3]; // [x, y, z]
 
-fn build_mesh_from_vertices(
-    primitive_topology: bevy_render::render_resource::PrimitiveTopology,
-    vertices: Vec<Vertex>,
-    indices: Vec<u32>,
-) -> Mesh {
-    let num_vertices = vertices.len();
-    let mut mesh = Mesh::new(primitive_topology);
-    mesh.set_indices(Some(bevy_render::mesh::Indices::U32(indices)));
-    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vertices);
-
-    let normals = vec![[0.0, 0.0, 0.0]; num_vertices];
-    let uvs = vec![[0.0, 0.0]; num_vertices];
-
-    mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
-    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
-
-    mesh
-}
-
+#[derive(Default)]
 pub struct BuildBevyMeshesContext {
     point_mesh_builder: point::PointMeshBuilder,
     line_string_mesh_builder: line_string::LineStringMeshBuilder,
-    polygon_mesh_builder: bevy_earcutr::PolygonMeshBuilder,
+    polygon_mesh_builder: polygon::PolygonMeshBuilder,
     polygon_border_mesh_builder: line_string::LineStringMeshBuilder,
-}
-
-impl Default for BuildBevyMeshesContext {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl BuildBevyMeshesContext {
-    pub fn new() -> Self {
-        BuildBevyMeshesContext {
-            point_mesh_builder: point::PointMeshBuilder::new(),
-            line_string_mesh_builder: line_string::LineStringMeshBuilder::new(),
-            polygon_mesh_builder: bevy_earcutr::PolygonMeshBuilder::new(),
-            polygon_border_mesh_builder: line_string::LineStringMeshBuilder::new(),
-        }
-    }
-}
-
-pub fn build_bevy_meshes<G: BuildBevyMeshes>(
-    geo: &G,
-    color: bevy_render::color::Color,
-    mut ctx: BuildBevyMeshesContext,
-) -> Result<impl Iterator<Item = PreparedMesh>, <G as BuildBevyMeshes>::Error> {
-    bevy_log::info_span!("Building Bevy meshes")
-        .in_scope(|| geo.populate_mesh_builders(&mut ctx))?;
-
-    bevy_log::info_span!("Building Bevy meshes").in_scope(|| {
-        Ok([
-            ctx.point_mesh_builder.build(),
-            ctx.line_string_mesh_builder.build(color),
-            ctx.polygon_mesh_builder
-                .build()
-                .map(|mesh| PreparedMesh::Polygon { mesh, color }),
-            ctx.polygon_border_mesh_builder
-                .build(bevy_render::color::Color::BLACK),
-        ]
-        .into_iter()
-        .flatten())
-    })
 }
 
 pub trait BuildBevyMeshes {
     type Error: error::Error;
 
     fn populate_mesh_builders(&self, ctx: &mut BuildBevyMeshesContext) -> Result<(), Self::Error>;
+
+    fn build_bevy_meshes(
+        &self,
+        color: bevy_render::color::Color,
+    ) -> Result<Vec<PreparedMesh>, Self::Error> {
+        let mut ctx = BuildBevyMeshesContext::default();
+        bevy_log::info_span!("Building Bevy meshes")
+            .in_scope(|| self.populate_mesh_builders(&mut ctx))?;
+
+        bevy_log::info_span!("Building Bevy meshes").in_scope(|| {
+            Ok([
+                ctx.point_mesh_builder.build(),
+                ctx.line_string_mesh_builder.build(color),
+                ctx.polygon_mesh_builder.build(color),
+                ctx.polygon_border_mesh_builder
+                    .build(bevy_render::color::Color::BLACK),
+            ]
+            .into_iter()
+            .flatten()
+            .collect())
+        })
+    }
 }
 
 impl BuildBevyMeshes for geo::Point {
@@ -112,8 +76,7 @@ impl BuildBevyMeshes for geo::Polygon {
     type Error = num::TryFromIntError;
 
     fn populate_mesh_builders(&self, ctx: &mut BuildBevyMeshesContext) -> Result<(), Self::Error> {
-        ctx.polygon_mesh_builder
-            .add_earcutr_input(polygon_to_earcutr_input(self));
+        ctx.polygon_mesh_builder.polygons.push(self.clone());
         ctx.polygon_border_mesh_builder
             .add_line_string(self.exterior())?;
         for interior in self.interiors() {
@@ -211,28 +174,21 @@ impl BuildBevyMeshes for geo::GeometryCollection {
     }
 }
 
-fn polygon_to_earcutr_input(polygon: &geo::Polygon) -> bevy_earcutr::EarcutrInput {
-    let mut vertices = Vec::with_capacity(polygon.coords_count() * 2);
-    let mut interior_indices = Vec::with_capacity(polygon.interiors().len());
-    debug_assert!(polygon.exterior().0.len() >= 4);
+fn build_mesh_from_vertices(
+    primitive_topology: bevy_render::render_resource::PrimitiveTopology,
+    vertices: Vec<Vertex>,
+    indices: Vec<u32>,
+) -> Mesh {
+    let num_vertices = vertices.len();
+    let mut mesh = Mesh::new(primitive_topology);
+    mesh.set_indices(Some(bevy_render::mesh::Indices::U32(indices)));
+    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vertices);
 
-    flat_line_string_coords_2(polygon.exterior(), &mut vertices);
+    let normals = vec![[0.0, 0.0, 0.0]; num_vertices];
+    let uvs = vec![[0.0, 0.0]; num_vertices];
 
-    for interior in polygon.interiors() {
-        debug_assert!(interior.0.len() >= 4);
-        interior_indices.push(vertices.len() / 2);
-        flat_line_string_coords_2(interior, &mut vertices);
-    }
+    mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
 
-    bevy_earcutr::EarcutrInput {
-        vertices,
-        interior_indices,
-    }
-}
-
-fn flat_line_string_coords_2(line_string: &geo::LineString, vertices: &mut Vec<f64>) {
-    for coord in &line_string.0 {
-        vertices.push(coord.x);
-        vertices.push(coord.y);
-    }
+    mesh
 }
