@@ -55,7 +55,7 @@ impl Default for BuildBevyMeshesContext {
 impl BuildBevyMeshesContext {
     pub fn new() -> Self {
         BuildBevyMeshesContext {
-            point_mesh_builder: point::PointMeshBuilder::new(),
+            point_mesh_builder: point::PointMeshBuilder::default(),
             line_string_mesh_builder: line_string::LineStringMeshBuilder::default(),
             polygon_mesh_builder: bevy_earcutr::PolygonMeshBuilder::default(),
             polygon_border_mesh_builder: line_string::LineStringMeshBuilder::default(),
