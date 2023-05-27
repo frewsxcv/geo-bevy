@@ -39,28 +39,12 @@ fn build_mesh_from_vertices(
     mesh
 }
 
+#[derive(Default)]
 pub struct BuildBevyMeshesContext {
     point_mesh_builder: point::PointMeshBuilder,
     line_string_mesh_builder: line_string::LineStringMeshBuilder,
     polygon_mesh_builder: bevy_earcutr::PolygonMeshBuilder,
     polygon_border_mesh_builder: line_string::LineStringMeshBuilder,
-}
-
-impl Default for BuildBevyMeshesContext {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl BuildBevyMeshesContext {
-    pub fn new() -> Self {
-        BuildBevyMeshesContext {
-            point_mesh_builder: point::PointMeshBuilder::default(),
-            line_string_mesh_builder: line_string::LineStringMeshBuilder::default(),
-            polygon_mesh_builder: bevy_earcutr::PolygonMeshBuilder::default(),
-            polygon_border_mesh_builder: line_string::LineStringMeshBuilder::default(),
-        }
-    }
 }
 
 pub fn build_bevy_meshes<G: BuildBevyMeshes>(
