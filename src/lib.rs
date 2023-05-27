@@ -5,9 +5,10 @@
     clippy::expect_used
 )]
 
+use std::num::TryFromIntError;
+
 use bevy::prelude::*;
 use geo::algorithm::coords_iter::CoordsIter;
-use std::{error, num};
 
 mod line_string;
 mod point;
@@ -50,9 +51,10 @@ pub struct BuildBevyMeshesContext {
 pub fn build_bevy_meshes<G: BuildBevyMeshes>(
     geo: &G,
     color: Color,
-    mut ctx: BuildBevyMeshesContext,
-) -> Result<impl Iterator<Item = PreparedMesh>, <G as BuildBevyMeshes>::Error> {
-    info_span!("Building Bevy meshes").in_scope(|| geo.populate_mesh_builders(&mut ctx))?;
+) -> Result<impl Iterator<Item = PreparedMesh>, TryFromIntError> {
+    let mut ctx = BuildBevyMeshesContext::default();
+
+    info_span!("Populating Bevy mesh builder").in_scope(|| geo.populate_mesh_builders(&mut ctx))?;
 
     info_span!("Building Bevy meshes").in_scope(|| {
         Ok([
@@ -69,31 +71,35 @@ pub fn build_bevy_meshes<G: BuildBevyMeshes>(
 }
 
 pub trait BuildBevyMeshes {
-    type Error: error::Error;
-
-    fn populate_mesh_builders(&self, ctx: &mut BuildBevyMeshesContext) -> Result<(), Self::Error>;
+    fn populate_mesh_builders(
+        &self,
+        ctx: &mut BuildBevyMeshesContext,
+    ) -> Result<(), TryFromIntError>;
 }
 
 impl BuildBevyMeshes for geo::Point {
-    type Error = num::TryFromIntError;
-
-    fn populate_mesh_builders(&self, ctx: &mut BuildBevyMeshesContext) -> Result<(), Self::Error> {
+    fn populate_mesh_builders(
+        &self,
+        ctx: &mut BuildBevyMeshesContext,
+    ) -> Result<(), TryFromIntError> {
         ctx.point_mesh_builder.add_point(self)
     }
 }
 
 impl BuildBevyMeshes for geo::LineString {
-    type Error = num::TryFromIntError;
-
-    fn populate_mesh_builders(&self, ctx: &mut BuildBevyMeshesContext) -> Result<(), Self::Error> {
+    fn populate_mesh_builders(
+        &self,
+        ctx: &mut BuildBevyMeshesContext,
+    ) -> Result<(), TryFromIntError> {
         ctx.line_string_mesh_builder.add_line_string(self)
     }
 }
 
 impl BuildBevyMeshes for geo::Polygon {
-    type Error = num::TryFromIntError;
-
-    fn populate_mesh_builders(&self, ctx: &mut BuildBevyMeshesContext) -> Result<(), Self::Error> {
+    fn populate_mesh_builders(
+        &self,
+        ctx: &mut BuildBevyMeshesContext,
+    ) -> Result<(), TryFromIntError> {
         ctx.polygon_mesh_builder
             .add_earcutr_input(polygon_to_earcutr_input(self));
         ctx.polygon_border_mesh_builder
@@ -106,9 +112,10 @@ impl BuildBevyMeshes for geo::Polygon {
 }
 
 impl BuildBevyMeshes for geo::MultiPoint {
-    type Error = num::TryFromIntError;
-
-    fn populate_mesh_builders(&self, ctx: &mut BuildBevyMeshesContext) -> Result<(), Self::Error> {
+    fn populate_mesh_builders(
+        &self,
+        ctx: &mut BuildBevyMeshesContext,
+    ) -> Result<(), TryFromIntError> {
         for point in &self.0 {
             point.populate_mesh_builders(ctx)?;
         }
@@ -117,9 +124,10 @@ impl BuildBevyMeshes for geo::MultiPoint {
 }
 
 impl BuildBevyMeshes for geo::MultiLineString {
-    type Error = num::TryFromIntError;
-
-    fn populate_mesh_builders(&self, ctx: &mut BuildBevyMeshesContext) -> Result<(), Self::Error> {
+    fn populate_mesh_builders(
+        &self,
+        ctx: &mut BuildBevyMeshesContext,
+    ) -> Result<(), TryFromIntError> {
         for line_string in &self.0 {
             line_string.populate_mesh_builders(ctx)?;
         }
@@ -128,9 +136,10 @@ impl BuildBevyMeshes for geo::MultiLineString {
 }
 
 impl BuildBevyMeshes for geo::MultiPolygon {
-    type Error = num::TryFromIntError;
-
-    fn populate_mesh_builders(&self, ctx: &mut BuildBevyMeshesContext) -> Result<(), Self::Error> {
+    fn populate_mesh_builders(
+        &self,
+        ctx: &mut BuildBevyMeshesContext,
+    ) -> Result<(), TryFromIntError> {
         for polygon in &self.0 {
             polygon.populate_mesh_builders(ctx)?;
         }
@@ -139,33 +148,37 @@ impl BuildBevyMeshes for geo::MultiPolygon {
 }
 
 impl BuildBevyMeshes for geo::Line {
-    type Error = num::TryFromIntError;
-
-    fn populate_mesh_builders(&self, ctx: &mut BuildBevyMeshesContext) -> Result<(), Self::Error> {
+    fn populate_mesh_builders(
+        &self,
+        ctx: &mut BuildBevyMeshesContext,
+    ) -> Result<(), TryFromIntError> {
         geo::LineString::new(vec![self.start, self.end]).populate_mesh_builders(ctx)
     }
 }
 
 impl BuildBevyMeshes for geo::Triangle {
-    type Error = num::TryFromIntError;
-
-    fn populate_mesh_builders(&self, ctx: &mut BuildBevyMeshesContext) -> Result<(), Self::Error> {
+    fn populate_mesh_builders(
+        &self,
+        ctx: &mut BuildBevyMeshesContext,
+    ) -> Result<(), TryFromIntError> {
         self.to_polygon().populate_mesh_builders(ctx)
     }
 }
 
 impl BuildBevyMeshes for geo::Rect {
-    type Error = num::TryFromIntError;
-
-    fn populate_mesh_builders(&self, ctx: &mut BuildBevyMeshesContext) -> Result<(), Self::Error> {
+    fn populate_mesh_builders(
+        &self,
+        ctx: &mut BuildBevyMeshesContext,
+    ) -> Result<(), TryFromIntError> {
         self.to_polygon().populate_mesh_builders(ctx)
     }
 }
 
 impl BuildBevyMeshes for geo::Geometry {
-    type Error = num::TryFromIntError;
-
-    fn populate_mesh_builders(&self, ctx: &mut BuildBevyMeshesContext) -> Result<(), Self::Error> {
+    fn populate_mesh_builders(
+        &self,
+        ctx: &mut BuildBevyMeshesContext,
+    ) -> Result<(), TryFromIntError> {
         match self {
             geo::Geometry::Point(g) => g.populate_mesh_builders(ctx)?,
             geo::Geometry::Line(g) => g.populate_mesh_builders(ctx)?,
@@ -183,9 +196,10 @@ impl BuildBevyMeshes for geo::Geometry {
 }
 
 impl BuildBevyMeshes for geo::GeometryCollection {
-    type Error = num::TryFromIntError;
-
-    fn populate_mesh_builders(&self, ctx: &mut BuildBevyMeshesContext) -> Result<(), Self::Error> {
+    fn populate_mesh_builders(
+        &self,
+        ctx: &mut BuildBevyMeshesContext,
+    ) -> Result<(), TryFromIntError> {
         for g in self {
             g.populate_mesh_builders(ctx)?;
         }
