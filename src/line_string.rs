@@ -1,4 +1,5 @@
 use crate::Vertex;
+use bevy::prelude::Color;
 use std::num;
 
 pub struct LineStringMeshBuilder {
@@ -34,13 +35,13 @@ impl LineStringMeshBuilder {
         Ok(())
     }
 
-    pub fn build(self, color: bevy_render::color::Color) -> Option<crate::PreparedMesh> {
+    pub fn build(self, color: Color) -> Option<crate::PreparedMesh> {
         if self.vertices.is_empty() {
             None
         } else {
             Some(crate::PreparedMesh::LineString {
                 mesh: crate::build_mesh_from_vertices(
-                    bevy_render::render_resource::PrimitiveTopology::LineList,
+                    bevy::render::render_resource::PrimitiveTopology::LineList,
                     self.vertices,
                     self.indices,
                 ),
