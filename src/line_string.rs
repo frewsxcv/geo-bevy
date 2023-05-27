@@ -2,19 +2,13 @@ use crate::Vertex;
 use bevy::prelude::Color;
 use std::num;
 
+#[derive(Default)]
 pub struct LineStringMeshBuilder {
     vertices: Vec<Vertex>,
     indices: Vec<u32>,
 }
 
 impl LineStringMeshBuilder {
-    pub fn new() -> Self {
-        LineStringMeshBuilder {
-            vertices: vec![],
-            indices: vec![],
-        }
-    }
-
     /// Call for `add_earcutr_input` for each polygon you want to add to the mesh.
     pub fn add_line_string(
         &mut self,
