@@ -5,7 +5,7 @@
     clippy::expect_used
 )]
 
-use bevy_render::prelude::*;
+use bevy::prelude::*;
 use geo::algorithm::coords_iter::CoordsIter;
 use std::{error, num};
 
@@ -21,13 +21,13 @@ pub enum PreparedMesh {
 type Vertex = [f32; 3]; // [x, y, z]
 
 fn build_mesh_from_vertices(
-    primitive_topology: bevy_render::render_resource::PrimitiveTopology,
+    primitive_topology: bevy::render::render_resource::PrimitiveTopology,
     vertices: Vec<Vertex>,
     indices: Vec<u32>,
 ) -> Mesh {
     let num_vertices = vertices.len();
     let mut mesh = Mesh::new(primitive_topology);
-    mesh.set_indices(Some(bevy_render::mesh::Indices::U32(indices)));
+    mesh.set_indices(Some(bevy::render::mesh::Indices::U32(indices)));
     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vertices);
 
     let normals = vec![[0.0, 0.0, 0.0]; num_vertices];
@@ -57,7 +57,7 @@ impl BuildBevyMeshesContext {
         BuildBevyMeshesContext {
             point_mesh_builder: point::PointMeshBuilder::new(),
             line_string_mesh_builder: line_string::LineStringMeshBuilder::new(),
-            polygon_mesh_builder: bevy_earcutr::PolygonMeshBuilder::new(),
+            polygon_mesh_builder: bevy_earcutr::PolygonMeshBuilder::default(),
             polygon_border_mesh_builder: line_string::LineStringMeshBuilder::new(),
         }
     }
@@ -65,21 +65,19 @@ impl BuildBevyMeshesContext {
 
 pub fn build_bevy_meshes<G: BuildBevyMeshes>(
     geo: &G,
-    color: bevy_render::color::Color,
+    color: Color,
     mut ctx: BuildBevyMeshesContext,
 ) -> Result<impl Iterator<Item = PreparedMesh>, <G as BuildBevyMeshes>::Error> {
-    bevy_log::info_span!("Building Bevy meshes")
-        .in_scope(|| geo.populate_mesh_builders(&mut ctx))?;
+    info_span!("Building Bevy meshes").in_scope(|| geo.populate_mesh_builders(&mut ctx))?;
 
-    bevy_log::info_span!("Building Bevy meshes").in_scope(|| {
+    info_span!("Building Bevy meshes").in_scope(|| {
         Ok([
             ctx.point_mesh_builder.build(),
             ctx.line_string_mesh_builder.build(color),
             ctx.polygon_mesh_builder
                 .build()
                 .map(|mesh| PreparedMesh::Polygon { mesh, color }),
-            ctx.polygon_border_mesh_builder
-                .build(bevy_render::color::Color::BLACK),
+            ctx.polygon_border_mesh_builder.build(Color::BLACK),
         ]
         .into_iter()
         .flatten())

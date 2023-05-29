@@ -8,8 +8,6 @@ repository = "https://github.com/frewsxcv/geo-bevy"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-bevy_log = "0.9"
-bevy_render = "0.9"
-bevy-earcutr = "0.8"
+bevy-earcutr = "0.9"
+bevy = { version = "0.10", default-features = false,  features = ["bevy_render"] }
 geo = "0.23"
-
