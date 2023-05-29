@@ -8,7 +8,6 @@ repository = "https://github.com/frewsxcv/geo-bevy"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-# TEMP: waiting for: https://github.com/frewsxcv/bevy-earcutr/pull/4 
-bevy-earcutr ={ git = "https://github.com/gibbz00/bevy-earcutr" }
+bevy-earcutr = "0.9"
 bevy = { version = "0.10", default-features = false,  features = ["bevy_render"] }
 geo = "0.23"
