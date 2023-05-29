@@ -1,12 +1,4 @@
-#![warn(
-    clippy::unwrap_used,
-    clippy::cast_lossless,
-    clippy::unimplemented,
-    clippy::expect_used
-)]
-
 use std::num::TryFromIntError;
-
 use bevy::prelude::*;
 use geo::algorithm::coords_iter::CoordsIter;
 
