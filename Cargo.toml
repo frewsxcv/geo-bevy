@@ -8,7 +8,7 @@ repository = "https://github.com/frewsxcv/geo-bevy"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-bevy_log = "0.9"
-bevy_render = "0.9"
+bevy_log = "0.10"
+bevy_render = "0.10"
 geo = { git = "https://github.com/georust/geo.git", branch = "frewsxcv/triangulate" }
 
