@@ -10,5 +10,4 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 bevy_log = "0.10"
 bevy_render = "0.10"
-geo = "0.25"
-
+geo = { git = "https://github.com/georust/geo.git" }

@@ -28,10 +28,10 @@ impl PolygonMeshBuilder {
     pub fn build(self, color: Color) -> Option<PreparedMesh> {
         let mut earcutr_result = EarcutrResult::default();
         for polygon in self.polygons {
-            let outcome = polygon.triangulate_earcut_vertexes();
+            let outcome = polygon.earcut_triangles_raw();
             earcutr_result.merge(EarcutrResult {
-                vertices: outcome.vertexes,
-                triangle_indices: outcome.triangle_indexes,
+                vertices: outcome.vertices,
+                triangle_indices: outcome.triangle_indices,
             });
         }
         let mesh = build_mesh_from_earcutr(earcutr_result, 0.);
