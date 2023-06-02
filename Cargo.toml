@@ -10,4 +10,4 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 bevy-earcutr = "0.9"
 bevy = { version = "0.10", default-features = false,  features = ["bevy_render"] }
-geo = "0.23"
+geo = "0.25"
