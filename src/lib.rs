@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use geo::algorithm::coords_iter::CoordsIter;
 use std::num::TryFromIntError;
 
 mod line_string;
@@ -174,31 +173,5 @@ impl BuildBevyMeshes for geo::GeometryCollection {
             g.populate_mesh_builders(ctx)?;
         }
         Ok(())
-    }
-}
-
-fn polygon_to_earcutr_input(polygon: &geo::Polygon) -> bevy_earcutr::EarcutrInput {
-    let mut vertices = Vec::with_capacity(polygon.coords_count() * 2);
-    let mut interior_indices = Vec::with_capacity(polygon.interiors().len());
-    debug_assert!(polygon.exterior().0.len() >= 4);
-
-    flat_line_string_coords_2(polygon.exterior(), &mut vertices);
-
-    for interior in polygon.interiors() {
-        debug_assert!(interior.0.len() >= 4);
-        interior_indices.push(vertices.len() / 2);
-        flat_line_string_coords_2(interior, &mut vertices);
-    }
-
-    bevy_earcutr::EarcutrInput {
-        vertices,
-        interior_indices,
-    }
-}
-
-fn flat_line_string_coords_2(line_string: &geo::LineString, vertices: &mut Vec<f64>) {
-    for coord in &line_string.0 {
-        vertices.push(coord.x);
-        vertices.push(coord.y);
     }
 }
