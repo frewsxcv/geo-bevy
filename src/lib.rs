@@ -4,11 +4,18 @@ use std::num::TryFromIntError;
 
 mod line_string;
 mod point;
+mod polygon;
 
 pub enum PreparedMesh {
     Point(Vec<geo::Point>),
-    LineString { mesh: Mesh },
-    Polygon { mesh: Mesh },
+    LineString {
+        mesh: Mesh,
+    },
+    Polygon {
+        polygon_mesh: Mesh,
+        exterior_mesh: Mesh,
+        interior_meshes: Vec<Mesh>,
+    },
 }
 
 type Vertex = [f32; 3]; // [x, y, z]
@@ -32,12 +39,15 @@ fn build_mesh_from_vertices(
     mesh
 }
 
+trait BuildMesh {
+    fn build(self) -> Option<PreparedMesh>;
+}
+
 #[derive(Default)]
 pub struct BuildBevyMeshesContext {
     point_mesh_builder: point::PointMeshBuilder,
     line_string_mesh_builder: line_string::LineStringMeshBuilder,
-    polygon_mesh_builder: bevy_earcutr::PolygonMeshBuilder,
-    polygon_border_mesh_builder: line_string::LineStringMeshBuilder,
+    polygon_mesh_builder: polygon::PolygonMeshBuilder,
 }
 
 pub fn build_bevy_meshes<G: BuildBevyMeshes>(
@@ -51,10 +61,7 @@ pub fn build_bevy_meshes<G: BuildBevyMeshes>(
         Ok([
             ctx.point_mesh_builder.build(),
             ctx.line_string_mesh_builder.build(),
-            ctx.polygon_mesh_builder
-                .build()
-                .map(|mesh| PreparedMesh::Polygon { mesh }),
-            ctx.polygon_border_mesh_builder.build(),
+            ctx.polygon_mesh_builder.build(),
         ]
         .into_iter()
         .flatten())
@@ -91,14 +98,7 @@ impl BuildBevyMeshes for geo::Polygon {
         &self,
         ctx: &mut BuildBevyMeshesContext,
     ) -> Result<(), TryFromIntError> {
-        ctx.polygon_mesh_builder
-            .add_earcutr_input(polygon_to_earcutr_input(self));
-        ctx.polygon_border_mesh_builder
-            .add_line_string(self.exterior())?;
-        for interior in self.interiors() {
-            ctx.polygon_border_mesh_builder.add_line_string(interior)?;
-        }
-        Ok(())
+        ctx.polygon_mesh_builder.add_polygon_components(self)
     }
 }
 

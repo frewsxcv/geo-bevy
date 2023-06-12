@@ -27,18 +27,24 @@ impl LineStringMeshBuilder {
         }
         Ok(())
     }
+}
 
-    pub fn build(self) -> Option<crate::PreparedMesh> {
+impl From<LineStringMeshBuilder> for bevy::prelude::Mesh {
+    fn from(line_string_builder: LineStringMeshBuilder) -> Self {
+        crate::build_mesh_from_vertices(
+            bevy::render::render_resource::PrimitiveTopology::LineList,
+            line_string_builder.vertices,
+            line_string_builder.indices,
+        )
+    }
+}
+
+impl crate::BuildMesh for LineStringMeshBuilder {
+    fn build(self) -> Option<crate::PreparedMesh> {
         if self.vertices.is_empty() {
             None
         } else {
-            Some(crate::PreparedMesh::LineString {
-                mesh: crate::build_mesh_from_vertices(
-                    bevy::render::render_resource::PrimitiveTopology::LineList,
-                    self.vertices,
-                    self.indices,
-                ),
-            })
+            Some(crate::PreparedMesh::LineString { mesh: self.into() })
         }
     }
 }
