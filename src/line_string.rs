@@ -1,5 +1,7 @@
-use crate::Vertex;
+use bevy::prelude::Mesh;
 use std::num;
+
+type Vertex = [f32; 3]; // [x, y, z]
 
 #[derive(Default)]
 pub struct LineStringMeshBuilder {
@@ -29,13 +31,22 @@ impl LineStringMeshBuilder {
     }
 }
 
-impl From<LineStringMeshBuilder> for bevy::prelude::Mesh {
+impl From<LineStringMeshBuilder> for Mesh {
     fn from(line_string_builder: LineStringMeshBuilder) -> Self {
-        crate::build_mesh_from_vertices(
-            bevy::render::render_resource::PrimitiveTopology::LineList,
-            line_string_builder.vertices,
-            line_string_builder.indices,
-        )
+        let vertices = line_string_builder.vertices;
+        let indices = line_string_builder.indices;
+        let num_vertices = vertices.len();
+        let mut mesh = Mesh::new(bevy::render::render_resource::PrimitiveTopology::LineList);
+        mesh.set_indices(Some(bevy::render::mesh::Indices::U32(indices)));
+        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vertices);
+
+        let normals = vec![[0.0, 0.0, 0.0]; num_vertices];
+        let uvs = vec![[0.0, 0.0]; num_vertices];
+
+        mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+        mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
+
+        mesh
     }
 }
 
