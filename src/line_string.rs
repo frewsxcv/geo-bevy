@@ -1,5 +1,4 @@
 use crate::Vertex;
-use bevy::prelude::Color;
 use std::num;
 
 #[derive(Default)]
@@ -29,7 +28,7 @@ impl LineStringMeshBuilder {
         Ok(())
     }
 
-    pub fn build(self, color: Color) -> Option<crate::PreparedMesh> {
+    pub fn build(self) -> Option<crate::PreparedMesh> {
         if self.vertices.is_empty() {
             None
         } else {
@@ -39,7 +38,6 @@ impl LineStringMeshBuilder {
                     self.vertices,
                     self.indices,
                 ),
-                color,
             })
         }
     }

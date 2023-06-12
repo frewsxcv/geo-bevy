@@ -1,14 +1,14 @@
-use std::num::TryFromIntError;
 use bevy::prelude::*;
 use geo::algorithm::coords_iter::CoordsIter;
+use std::num::TryFromIntError;
 
 mod line_string;
 mod point;
 
 pub enum PreparedMesh {
     Point(Vec<geo::Point>),
-    LineString { mesh: Mesh, color: Color },
-    Polygon { mesh: Mesh, color: Color },
+    LineString { mesh: Mesh },
+    Polygon { mesh: Mesh },
 }
 
 type Vertex = [f32; 3]; // [x, y, z]
@@ -42,7 +42,6 @@ pub struct BuildBevyMeshesContext {
 
 pub fn build_bevy_meshes<G: BuildBevyMeshes>(
     geo: &G,
-    color: Color,
 ) -> Result<impl Iterator<Item = PreparedMesh>, TryFromIntError> {
     let mut ctx = BuildBevyMeshesContext::default();
 
@@ -51,11 +50,11 @@ pub fn build_bevy_meshes<G: BuildBevyMeshes>(
     info_span!("Building Bevy meshes").in_scope(|| {
         Ok([
             ctx.point_mesh_builder.build(),
-            ctx.line_string_mesh_builder.build(color),
+            ctx.line_string_mesh_builder.build(),
             ctx.polygon_mesh_builder
                 .build()
-                .map(|mesh| PreparedMesh::Polygon { mesh, color }),
-            ctx.polygon_border_mesh_builder.build(Color::BLACK),
+                .map(|mesh| PreparedMesh::Polygon { mesh }),
+            ctx.polygon_border_mesh_builder.build(),
         ]
         .into_iter()
         .flatten())
