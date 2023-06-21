@@ -1,7 +1,7 @@
 [package]
 name = "geo-bevy"
 description = "Generate Bevy meshes from `geo` types"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Corey Farwell <coreyf@rwell.org>"]
 edition = "2021"
 repository = "https://github.com/frewsxcv/geo-bevy"
