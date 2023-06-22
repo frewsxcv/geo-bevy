@@ -13,7 +13,7 @@ impl PointMeshBuilder {
     }
 }
 
-impl crate::BuildMesh for PointMeshBuilder {
+impl crate::build_mesh::BuildMesh for PointMeshBuilder {
     fn build(self) -> Option<crate::GeometryMesh> {
         if self.points.is_empty() {
             None

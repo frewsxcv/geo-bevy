@@ -74,7 +74,7 @@ impl From<PolygonMeshBuilder> for Option<PolygonMesh> {
     }
 }
 
-impl crate::BuildMesh for PolygonMeshBuilder {
+impl crate::build_mesh::BuildMesh for PolygonMeshBuilder {
     fn build(self) -> Option<GeometryMesh> {
         Option::<PolygonMesh>::from(self).map(GeometryMesh::Polygon)
     }
