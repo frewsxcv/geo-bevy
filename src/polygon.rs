@@ -1,4 +1,4 @@
-use crate::{line_string::LineStringMeshBuilder, PreparedMesh};
+use crate::{line_string::LineStringMeshBuilder, GeometryMesh};
 use bevy::prelude::Mesh;
 use geo::CoordsIter;
 use geo_types::{LineString, Polygon};
@@ -75,7 +75,7 @@ impl From<PolygonMeshBuilder> for Option<PolygonMesh> {
 }
 
 impl crate::BuildMesh for PolygonMeshBuilder {
-    fn build(self) -> Option<PreparedMesh> {
-        Option::<PolygonMesh>::from(self).map(PreparedMesh::Polygon)
+    fn build(self) -> Option<GeometryMesh> {
+        Option::<PolygonMesh>::from(self).map(GeometryMesh::Polygon)
     }
 }

@@ -62,7 +62,7 @@ pub fn triangle_to_mesh(triangle: &Triangle) -> Result<Option<PolygonMesh>, TryF
     polygon_to_mesh(&triangle.to_polygon())
 }
 
-pub fn geometry_to_mesh(geometry: &Geometry) -> Result<Option<PreparedMesh>, TryFromIntError> {
+pub fn geometry_to_mesh(geometry: &Geometry) -> Result<Option<GeometryMesh>, TryFromIntError> {
     let mut ctx = BuildBevyMeshesContext::default();
 
     info_span!("Populating Bevy mesh builder")
@@ -82,7 +82,7 @@ pub fn geometry_to_mesh(geometry: &Geometry) -> Result<Option<PreparedMesh>, Try
 
 pub fn geometry_collection_to_mesh(
     geometry_collection: &GeometryCollection,
-) -> Result<Vec<PreparedMesh>, TryFromIntError> {
+) -> Result<Vec<GeometryMesh>, TryFromIntError> {
     let mut geometry_meshes = Vec::with_capacity(geometry_collection.len());
     for geometry in geometry_collection {
         if let Some(geometry_mesh) = geometry_to_mesh(geometry)? {
@@ -93,14 +93,14 @@ pub fn geometry_collection_to_mesh(
     Ok(geometry_meshes)
 }
 
-pub enum PreparedMesh {
+pub enum GeometryMesh {
     Point(Vec<Point>),
     LineString { mesh: Mesh },
     Polygon(polygon::PolygonMesh),
 }
 
 trait BuildMesh {
-    fn build(self) -> Option<PreparedMesh>;
+    fn build(self) -> Option<GeometryMesh>;
 }
 
 #[derive(Default)]
