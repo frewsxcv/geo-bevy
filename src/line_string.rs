@@ -50,12 +50,18 @@ impl From<LineStringMeshBuilder> for Mesh {
     }
 }
 
-impl crate::BuildMesh for LineStringMeshBuilder {
-    fn build(self) -> Option<crate::PreparedMesh> {
-        if self.vertices.is_empty() {
+impl From<LineStringMeshBuilder> for Option<Mesh> {
+    fn from(line_string_mesh_builder: LineStringMeshBuilder) -> Self {
+        if line_string_mesh_builder.vertices.is_empty() {
             None
         } else {
-            Some(crate::PreparedMesh::LineString { mesh: self.into() })
+            Some(line_string_mesh_builder.into())
         }
+    }
+}
+
+impl crate::BuildMesh for LineStringMeshBuilder {
+    fn build(self) -> Option<crate::PreparedMesh> {
+        Option::<Mesh>::from(self).map(|mesh| crate::PreparedMesh::LineString { mesh })
     }
 }
