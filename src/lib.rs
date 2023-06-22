@@ -98,6 +98,6 @@ pub fn geometry_collection_to_mesh(
 
 pub enum GeometryMesh {
     Point(Vec<Point>),
-    LineString { mesh: Mesh },
+    LineString(Mesh),
     Polygon(polygon::PolygonMesh),
 }

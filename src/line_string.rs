@@ -62,6 +62,6 @@ impl From<LineStringMeshBuilder> for Option<Mesh> {
 
 impl crate::build_mesh::BuildMesh for LineStringMeshBuilder {
     fn build(self) -> Option<crate::GeometryMesh> {
-        Option::<Mesh>::from(self).map(|mesh| crate::GeometryMesh::LineString { mesh })
+        Option::<Mesh>::from(self).map(|mesh| crate::GeometryMesh::LineString(mesh))
     }
 }
