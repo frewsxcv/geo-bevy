@@ -1,11 +1,11 @@
 use bevy::prelude::{info_span, Mesh};
-use build_mesh::BuildBevyMeshes;
-use build_mesh::BuildMesh;
+use build_mesh::{BuildBevyMeshes, BuildMesh};
 use geo_types::geometry::*;
 use line_string::LineStringMeshBuilder;
-use polygon::PolygonMesh;
 use polygon::PolygonMeshBuilder;
 use std::num::TryFromIntError;
+
+pub use polygon::PolygonMesh;
 
 mod build_mesh;
 mod line_string;
