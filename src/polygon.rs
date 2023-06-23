@@ -4,7 +4,7 @@ use geo::CoordsIter;
 use geo_types::{LineString, Polygon};
 
 pub struct PolygonMesh {
-    pub polygon_mesh: Mesh,
+    pub mesh: Mesh,
     pub exterior_mesh: Mesh,
     pub interior_meshes: Vec<Mesh>,
 }
@@ -63,7 +63,7 @@ impl From<PolygonMeshBuilder> for Option<PolygonMesh> {
             .polygon
             .build()
             .map(|polygon_mesh| PolygonMesh {
-                polygon_mesh,
+                mesh: polygon_mesh,
                 exterior_mesh: polygon_mesh_builder.exterior.into(),
                 interior_meshes: polygon_mesh_builder
                     .interiors
