@@ -17,17 +17,15 @@ pub struct PolygonMeshBuilder {
 }
 
 impl PolygonMeshBuilder {
-    pub fn add_polygon(&mut self, polygon: &Polygon) -> Result<(), std::num::TryFromIntError> {
+    pub fn add_polygon(&mut self, polygon: &Polygon) {
         self.polygon
             .add_earcutr_input(Self::polygon_to_earcutr_input(polygon));
-        self.exterior.add_line_string(polygon.exterior())?;
+        self.exterior.add_line_string(polygon.exterior());
         for interior in polygon.interiors() {
             let mut interior_line_string_builder = LineStringMeshBuilder::default();
-            interior_line_string_builder.add_line_string(interior)?;
+            interior_line_string_builder.add_line_string(interior);
             self.interiors.push(interior_line_string_builder);
         }
-
-        Ok(())
     }
 
     fn polygon_to_earcutr_input(polygon: &Polygon) -> bevy_earcutr::EarcutrInput {

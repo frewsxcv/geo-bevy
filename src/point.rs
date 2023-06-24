@@ -1,5 +1,3 @@
-use std::num;
-
 #[derive(Default)]
 pub struct PointMeshBuilder {
     points: Vec<geo::Point>,
@@ -7,9 +5,8 @@ pub struct PointMeshBuilder {
 
 impl PointMeshBuilder {
     /// Call for `add_earcutr_input` for each polygon you want to add to the mesh.
-    pub fn add_point(&mut self, point: &geo::Point) -> Result<(), num::TryFromIntError> {
+    pub fn add_point(&mut self, point: &geo::Point) {
         self.points.push(*point);
-        Ok(())
     }
 }
 

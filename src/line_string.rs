@@ -1,5 +1,4 @@
 use bevy::prelude::Mesh;
-use std::num;
 
 type Vertex = [f32; 3]; // [x, y, z]
 
@@ -11,10 +10,7 @@ pub struct LineStringMeshBuilder {
 
 impl LineStringMeshBuilder {
     /// Call for `add_earcutr_input` for each polygon you want to add to the mesh.
-    pub fn add_line_string(
-        &mut self,
-        line_string: &geo::LineString,
-    ) -> Result<(), num::TryFromIntError> {
+    pub fn add_line_string(&mut self, line_string: &geo::LineString) {
         let index_base = self.vertices.len();
 
         self.vertices.reserve(self.vertices.len());
@@ -23,11 +19,10 @@ impl LineStringMeshBuilder {
         for (i, coord) in line_string.0.iter().enumerate() {
             self.vertices.push([coord.x as f32, coord.y as f32, 0.0f32]);
             if i != line_string.0.len() - 1 {
-                self.indices.push(u32::try_from(index_base + i)?);
-                self.indices.push(u32::try_from(index_base + i + 1)?);
+                self.indices.push((index_base + i) as u32);
+                self.indices.push((index_base + i + 1) as u32);
             }
         }
-        Ok(())
     }
 }
 
