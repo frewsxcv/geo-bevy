@@ -10,6 +10,7 @@ pub struct LineStringMeshBuilder {
 
 impl LineStringMeshBuilder {
     /// Call for `add_earcutr_input` for each polygon you want to add to the mesh.
+    /// Panics if self.vertices.len() + linestring coords > u32::MAX (4_294_967_295).
     pub fn add_line_string(&mut self, line_string: &geo::LineString) {
         let index_base = self.vertices.len();
 
