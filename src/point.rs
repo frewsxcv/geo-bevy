@@ -11,8 +11,10 @@ impl PointMeshBuilder {
         self.points.push(*point);
         Ok(())
     }
+}
 
-    pub fn build(self) -> Option<crate::PreparedMesh> {
+impl crate::BuildMesh for PointMeshBuilder {
+    fn build(self) -> Option<crate::PreparedMesh> {
         if self.points.is_empty() {
             None
         } else {
