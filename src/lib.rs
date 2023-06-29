@@ -1,12 +1,4 @@
-#![warn(
-    clippy::unwrap_used,
-    clippy::cast_lossless,
-    clippy::unimplemented,
-    clippy::expect_used
-)]
-
 use bevy::prelude::*;
-use std::{error, num};
 use std::num::TryFromIntError;
 
 mod line_string;
@@ -35,36 +27,6 @@ pub struct BuildBevyMeshesContext {
     line_string_mesh_builder: line_string::LineStringMeshBuilder,
     polygon_mesh_builder: polygon::PolygonMeshBuilder,
 }
-
-/*
-pub trait BuildBevyMeshes {
-    type Error: error::Error;
-
-    fn populate_mesh_builders(&self, ctx: &mut BuildBevyMeshesContext) -> Result<(), Self::Error>;
-
-    fn build_bevy_meshes(
-        &self,
-        color: bevy_render::color::Color,
-    ) -> Result<Vec<PreparedMesh>, Self::Error> {
-        let mut ctx = BuildBevyMeshesContext::default();
-        bevy_log::info_span!("Building Bevy meshes")
-            .in_scope(|| self.populate_mesh_builders(&mut ctx))?;
-
-        bevy_log::info_span!("Building Bevy meshes").in_scope(|| {
-            Ok([
-                ctx.point_mesh_builder.build(),
-                ctx.line_string_mesh_builder.build(color),
-                ctx.polygon_mesh_builder.build(color),
-                ctx.polygon_border_mesh_builder
-                    .build(bevy_render::color::Color::BLACK),
-            ]
-            .into_iter()
-            .flatten()
-            .collect())
-        })
-    }
-}
-*/
 
 pub fn build_bevy_meshes<G: BuildBevyMeshes>(
     geo: &G,
