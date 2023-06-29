@@ -1,6 +1,5 @@
-/*
 use crate::PreparedMesh;
-use bevy::prelude::*;
+use bevy_render::prelude::*;
 use geo::TriangulateEarcut;
 
 #[derive(Default)]
@@ -57,7 +56,6 @@ pub fn build_mesh_from_earcutr(earcutr_result: EarcutrResult, z_index: f32) -> M
         vertices,
         indices,
     )
-}
 */
 
 use crate::{line_string::LineStringMeshBuilder, PreparedMesh};
