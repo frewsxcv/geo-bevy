@@ -12,7 +12,3 @@ bevy-earcutr = "0.9"
 bevy = { version = "0.10", default-features = false,  features = ["bevy_render"] }
 geo = "0.25"
 geo-types = "0.7"
-
-[patch.crates-io]
-# TEMP: https://github.com/georust/geo/pull/1020 is yet to included in a release.
-geo-types = { git = "https://github.com/georust/geo" }
