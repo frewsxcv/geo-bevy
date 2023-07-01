@@ -1,5 +1,4 @@
-use bevy::prelude::Mesh;
-use std::num;
+use bevy::prelude::{error, Mesh};
 
 type Vertex = [f32; 3]; // [x, y, z]
 
@@ -11,23 +10,30 @@ pub struct LineStringMeshBuilder {
 
 impl LineStringMeshBuilder {
     /// Call for `add_earcutr_input` for each polygon you want to add to the mesh.
-    pub fn add_line_string(
-        &mut self,
-        line_string: &geo::LineString,
-    ) -> Result<(), num::TryFromIntError> {
+    /// Logs error if self.vertices.len() + linestring coords > u32::MAX (4_294_967_295).
+    pub fn add_line_string(&mut self, line_string: &geo::LineString) {
         let index_base = self.vertices.len();
+        let line_string_vec = &line_string.0;
+
+        let max_index = index_base + line_string_vec.len();
+        if max_index > u32::MAX as usize {
+            error!(
+                "Integer overflow in LineStringMeshBuilder.add_line_string(): {}",
+                max_index
+            );
+            return;
+        }
 
         self.vertices.reserve(self.vertices.len());
         self.indices.reserve(self.indices.len() * 2);
 
-        for (i, coord) in line_string.0.iter().enumerate() {
+        for (i, coord) in line_string_vec.iter().enumerate() {
             self.vertices.push([coord.x as f32, coord.y as f32, 0.0f32]);
             if i != line_string.0.len() - 1 {
-                self.indices.push(u32::try_from(index_base + i)?);
-                self.indices.push(u32::try_from(index_base + i + 1)?);
+                self.indices.push((index_base + i) as u32);
+                self.indices.push((index_base + i + 1) as u32);
             }
         }
-        Ok(())
     }
 }
 
