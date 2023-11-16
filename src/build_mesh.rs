@@ -1,4 +1,4 @@
-use geo_types::*;
+use geo::geometry::*;
 
 pub trait BuildMesh {
     fn build(self) -> Option<crate::GeometryMesh>;

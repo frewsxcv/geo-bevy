@@ -1,6 +1,6 @@
 use bevy::prelude::{info_span, Mesh};
 use build_mesh::{BuildBevyMeshes, BuildMesh};
-use geo_types::geometry::*;
+use geo::geometry::*;
 use line_string::LineStringMeshBuilder;
 use polygon::PolygonMeshBuilder;
 

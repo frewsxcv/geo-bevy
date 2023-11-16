@@ -1,7 +1,7 @@
 use crate::{line_string::LineStringMeshBuilder, GeometryMesh};
 use bevy::prelude::Mesh;
 use geo::CoordsIter;
-use geo_types::{LineString, Polygon};
+use geo::geometry::{LineString, Polygon};
 
 pub struct PolygonMesh {
     pub mesh: Mesh,

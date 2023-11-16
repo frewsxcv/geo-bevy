@@ -1,6 +1,6 @@
 use bevy::{prelude::Mesh, render::mesh::VertexAttributeValues};
 use geo_bevy::*;
-use geo_types::geometry::*;
+use geo::geometry::*;
 
 const P_0: [f64; 2] = [0., 0.];
 const P_1: [f64; 2] = [1., 0.];
