@@ -1,4 +1,4 @@
-use bevy::prelude::{error, Mesh};
+use bevy::prelude::Mesh;
 
 type Vertex = [f32; 3]; // [x, y, z]
 
@@ -17,7 +17,7 @@ impl LineStringMeshBuilder {
 
         let max_index = index_base + line_string_vec.len();
         if max_index > u32::MAX as usize {
-            error!(
+            bevy::log::error!(
                 "Integer overflow in LineStringMeshBuilder.add_line_string(): {}",
                 max_index
             );
