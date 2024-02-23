@@ -42,8 +42,8 @@ impl From<LineStringMeshBuilder> for Mesh {
         let vertices = line_string_builder.vertices;
         let indices = line_string_builder.indices;
         let num_vertices = vertices.len();
-        let mut mesh = Mesh::new(bevy::render::render_resource::PrimitiveTopology::LineList);
-        mesh.set_indices(Some(bevy::render::mesh::Indices::U32(indices)));
+        let mut mesh = Mesh::new(bevy::render::render_resource::PrimitiveTopology::LineList, Default::default());
+        mesh.insert_indices(bevy::render::mesh::Indices::U32(indices));
         mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vertices);
 
         let normals = vec![[0.0, 0.0, 0.0]; num_vertices];
