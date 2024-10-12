@@ -11,63 +11,66 @@ pub struct LineStringMeshBuilder {
 impl LineStringMeshBuilder {
     /// Call for `add_earcutr_input` for each polygon you want to add to the mesh.
     /// Logs error if self.vertices.len() + linestring coords > u32::MAX (4_294_967_295).
-    pub fn add_line_string(&mut self, line_string: &geo::LineString) {
+    pub fn add_line_string<Scalar, I>(&mut self, line_string_iter: I) -> Result<(), crate::Error>
+    where
+        Scalar: geo::CoordFloat,
+        I: Iterator<Item = geo::Coord<Scalar>>,
+    {
         let index_base = self.vertices.len();
-        let line_string_vec = &line_string.0;
 
-        let max_index = index_base + line_string_vec.len();
-        if max_index > u32::MAX as usize {
-            bevy::log::error!(
-                "Integer overflow in LineStringMeshBuilder.add_line_string(): {}",
-                max_index
-            );
-            return;
-        }
-
+        // Reserve space for vertices and indices
         self.vertices.reserve(self.vertices.len());
         self.indices.reserve(self.indices.len() * 2);
 
-        for (i, coord) in line_string_vec.iter().enumerate() {
-            self.vertices.push([coord.x as f32, coord.y as f32, 0.0f32]);
-            if i != line_string.0.len() - 1 {
+        let mut last_index = None;
+        for (i, coord) in line_string_iter.enumerate() {
+            self.vertices.push([
+                coord.x.to_f32().ok_or(crate::Error::CouldNotConvertToF32)?,
+                coord.y.to_f32().ok_or(crate::Error::CouldNotConvertToF32)?,
+                0.0,
+            ]);
+
+            if let Some(last) = last_index {
+                self.indices.push(last as u32);
                 self.indices.push((index_base + i) as u32);
-                self.indices.push((index_base + i + 1) as u32);
             }
+            last_index = Some(index_base + i);
         }
+
+        Ok(())
     }
 }
 
-impl From<LineStringMeshBuilder> for Mesh {
-    fn from(line_string_builder: LineStringMeshBuilder) -> Self {
-        let vertices = line_string_builder.vertices;
-        let indices = line_string_builder.indices;
-        let num_vertices = vertices.len();
-        let mut mesh = Mesh::new(bevy::render::render_resource::PrimitiveTopology::LineList, Default::default());
-        mesh.insert_indices(bevy::render::mesh::Indices::U32(indices));
-        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vertices);
+impl TryFrom<LineStringMeshBuilder> for Mesh {
+    type Error = crate::Error;
 
-        let normals = vec![[0.0, 0.0, 0.0]; num_vertices];
-        let uvs = vec![[0.0, 0.0]; num_vertices];
-
-        mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
-        mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
-
-        mesh
-    }
-}
-
-impl From<LineStringMeshBuilder> for Option<Mesh> {
-    fn from(line_string_mesh_builder: LineStringMeshBuilder) -> Self {
+    fn try_from(line_string_mesh_builder: LineStringMeshBuilder) -> Result<Self, Self::Error> {
         if line_string_mesh_builder.vertices.is_empty() {
-            None
+            Err(crate::Error::EmptyGeometry)
         } else {
-            Some(line_string_mesh_builder.into())
+            let vertices = line_string_mesh_builder.vertices;
+            let indices = line_string_mesh_builder.indices;
+            let num_vertices = vertices.len();
+            let mut mesh = Mesh::new(
+                bevy::render::render_resource::PrimitiveTopology::LineList,
+                Default::default(),
+            );
+            mesh.insert_indices(bevy::render::mesh::Indices::U32(indices));
+            mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vertices);
+
+            let normals = vec![[0.0, 0.0, 0.0]; num_vertices];
+            let uvs = vec![[0.0, 0.0]; num_vertices];
+
+            mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+            mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
+
+            Ok(mesh)
         }
     }
 }
 
-impl crate::build_mesh::BuildMesh for LineStringMeshBuilder {
-    fn build(self) -> Option<crate::GeometryMesh> {
-        Option::<Mesh>::from(self).map(crate::GeometryMesh::LineString)
+impl<Scalar: geo::CoordFloat> crate::build_mesh::BuildMesh<Scalar> for LineStringMeshBuilder {
+    fn build(self) -> Result<crate::GeometryMesh<Scalar>, crate::Error> {
+        Ok(crate::GeometryMesh::LineString(self.try_into()?))
     }
 }

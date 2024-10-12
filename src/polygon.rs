@@ -1,7 +1,7 @@
-use crate::{line_string::LineStringMeshBuilder, GeometryMesh};
+use crate::line_string::LineStringMeshBuilder;
 use bevy::prelude::Mesh;
-use geo::CoordsIter;
 use geo::geometry::{LineString, Polygon};
+use geo::CoordsIter;
 
 pub struct PolygonMesh {
     pub mesh: Mesh,
@@ -9,26 +9,41 @@ pub struct PolygonMesh {
     pub interior_meshes: Vec<Mesh>,
 }
 
-#[derive(Default)]
-pub struct PolygonMeshBuilder {
-    polygon: bevy_earcutr::PolygonMeshBuilder,
+pub struct PolygonMeshBuilder<Scalar: geo::CoordFloat> {
+    polygon: bevy_earcutr::PolygonMeshBuilder<Scalar>,
     exterior: LineStringMeshBuilder,
     interiors: Vec<LineStringMeshBuilder>,
 }
 
-impl PolygonMeshBuilder {
-    pub fn add_polygon(&mut self, polygon: &Polygon) {
-        self.polygon
-            .add_earcutr_input(Self::polygon_to_earcutr_input(polygon));
-        self.exterior.add_line_string(polygon.exterior());
-        for interior in polygon.interiors() {
-            let mut interior_line_string_builder = LineStringMeshBuilder::default();
-            interior_line_string_builder.add_line_string(interior);
-            self.interiors.push(interior_line_string_builder);
+impl<Scalar: geo::CoordFloat> Default for PolygonMeshBuilder<Scalar> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<Scalar: geo::CoordFloat> PolygonMeshBuilder<Scalar> {
+    pub fn new() -> Self {
+        Self {
+            polygon: bevy_earcutr::PolygonMeshBuilder::default(),
+            exterior: LineStringMeshBuilder::default(),
+            interiors: Vec::new(),
         }
     }
 
-    fn polygon_to_earcutr_input(polygon: &Polygon) -> bevy_earcutr::EarcutrInput {
+    pub fn add_polygon(&mut self, polygon: &Polygon<Scalar>) -> Result<(), crate::Error> {
+        self.polygon
+            .add_earcutr_input(Self::polygon_to_earcutr_input(polygon));
+        self.exterior
+            .add_line_string(polygon.exterior().0.iter().copied())?;
+        for interior in polygon.interiors() {
+            let mut interior_line_string_builder = LineStringMeshBuilder::default();
+            interior_line_string_builder.add_line_string(interior.0.iter().copied())?;
+            self.interiors.push(interior_line_string_builder);
+        }
+        Ok(())
+    }
+
+    fn polygon_to_earcutr_input(polygon: &Polygon<Scalar>) -> bevy_earcutr::EarcutrInput<Scalar> {
         let mut vertices = Vec::with_capacity(polygon.coords_count() * 2);
         let mut interior_indices = Vec::with_capacity(polygon.interiors().len());
         debug_assert!(polygon.exterior().0.len() >= 4);
@@ -47,7 +62,7 @@ impl PolygonMeshBuilder {
         }
     }
 
-    fn flat_line_string_coords_2(line_string: &LineString, vertices: &mut Vec<f64>) {
+    fn flat_line_string_coords_2(line_string: &LineString<Scalar>, vertices: &mut Vec<Scalar>) {
         for coord in &line_string.0 {
             vertices.push(coord.x);
             vertices.push(coord.y);
@@ -55,25 +70,32 @@ impl PolygonMeshBuilder {
     }
 }
 
-impl From<PolygonMeshBuilder> for Option<PolygonMesh> {
-    fn from(polygon_mesh_builder: PolygonMeshBuilder) -> Self {
+impl<Scalar: geo::CoordFloat> TryFrom<PolygonMeshBuilder<Scalar>> for PolygonMesh {
+    type Error = crate::Error;
+
+    fn try_from(polygon_mesh_builder: PolygonMeshBuilder<Scalar>) -> Result<Self, Self::Error> {
         polygon_mesh_builder
             .polygon
             .build()
-            .map(|polygon_mesh| PolygonMesh {
-                mesh: polygon_mesh,
-                exterior_mesh: polygon_mesh_builder.exterior.into(),
-                interior_meshes: polygon_mesh_builder
+            .map_err(crate::Error::BevyEarcutr)
+            .and_then(|polygon_mesh| {
+                let exterior_mesh = Mesh::try_from(polygon_mesh_builder.exterior)?;
+                let interior_meshes = polygon_mesh_builder
                     .interiors
                     .into_iter()
-                    .map(|interior_builder| interior_builder.into())
-                    .collect(),
+                    .map(Mesh::try_from)
+                    .collect::<Result<Vec<_>, _>>()?;
+                Ok(PolygonMesh {
+                    mesh: polygon_mesh,
+                    exterior_mesh,
+                    interior_meshes,
+                })
             })
     }
 }
 
-impl crate::build_mesh::BuildMesh for PolygonMeshBuilder {
-    fn build(self) -> Option<GeometryMesh> {
-        Option::<PolygonMesh>::from(self).map(GeometryMesh::Polygon)
+impl<Scalar: geo::CoordFloat> crate::build_mesh::BuildMesh<Scalar> for PolygonMeshBuilder<Scalar> {
+    fn build(self) -> Result<crate::GeometryMesh<Scalar>, crate::Error> {
+        Ok(crate::GeometryMesh::Polygon(PolygonMesh::try_from(self)?))
     }
 }

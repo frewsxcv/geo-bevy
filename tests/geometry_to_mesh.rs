@@ -1,6 +1,6 @@
 use bevy::{prelude::Mesh, render::mesh::VertexAttributeValues};
-use geo_bevy::*;
 use geo::geometry::*;
+use geo_bevy::*;
 
 const P_0: [f64; 2] = [0., 0.];
 const P_1: [f64; 2] = [1., 0.];
@@ -20,7 +20,7 @@ pub fn builds_mesh_from_line() {
 
 pub fn builds_no_mesh_from_emty_line() {
     let line = Line::new(P_0, P_0);
-    assert!(line_to_mesh(&line).is_none())
+    assert!(line_to_mesh(&line).is_err())
 }
 
 #[test]
@@ -34,7 +34,7 @@ pub fn builds_mesh_from_line_string() {
 pub fn builds_mesh_from_multi_line_string() {
     let indices = vec![P_0, P_1, P_2];
     let meshes = multi_line_string_to_mesh(&MultiLineString::new(vec![indices.clone().into()]));
-    assert_eq!(indices, mesh_to_indices(&meshes.first().unwrap()));
+    assert_eq!(indices, mesh_to_indices(meshes.unwrap().first().unwrap()));
 }
 
 #[test]
@@ -68,7 +68,7 @@ pub fn builds_mesh_from_multi_polygon() {
 
     assert_eq!(
         exterior_ring,
-        mesh_to_indices(&polygon_meshes.first().unwrap().exterior_mesh)
+        mesh_to_indices(&polygon_meshes.unwrap().first().unwrap().exterior_mesh)
     );
 }
 
@@ -93,13 +93,13 @@ pub fn builds_mesh_from_triangle() {
 fn mesh_to_indices(mesh: &Mesh) -> Vec<[f64; 2]> {
     let VertexAttributeValues::Float32x3(vertices) = mesh
         .attribute(Mesh::ATTRIBUTE_POSITION)
-        .expect("Populated vertices") 
+        .expect("Populated vertices")
     else {
         panic!("Expected f32 vertices.")
     };
 
     let mut indices = vertices
-        .into_iter()
+        .iter()
         .map(|vec3| [vec3[0] as f64, vec3[1] as f64])
         .collect::<Vec<[f64; 2]>>();
 
