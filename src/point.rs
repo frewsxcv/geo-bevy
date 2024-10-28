@@ -1,22 +1,29 @@
-pub struct PointMeshBuilder<Scalar: geo::CoordFloat> {
-    points: Vec<geo::Point<Scalar>>,
+use geo_traits::CoordTrait;
+use num_traits::ToPrimitive;
+
+pub struct SpritePosition {
+    pub x: f32,
+    pub y: f32,
 }
 
-impl<Scalar: geo::CoordFloat> Default for PointMeshBuilder<Scalar> {
-    fn default() -> Self {
-        Self { points: Vec::new() }
-    }
+#[derive(Default)]
+
+pub struct PointMeshBuilder {
+    points: Vec<SpritePosition>,
 }
 
-impl<Scalar: geo::CoordFloat> PointMeshBuilder<Scalar> {
+impl PointMeshBuilder {
     /// Call for `add_earcutr_input` for each polygon you want to add to the mesh.
-    pub fn add_point(&mut self, point: &geo::Point<Scalar>) {
-        self.points.push(*point);
+    pub fn add_coord(&mut self, coord: impl CoordTrait) {
+        self.points.push(SpritePosition {
+            x: coord.x().to_f32().unwrap(),
+            y: coord.y().to_f32().unwrap(),
+        });
     }
 }
 
-impl<Scalar: geo::CoordFloat> crate::build_mesh::BuildMesh<Scalar> for PointMeshBuilder<Scalar> {
-    fn build(self) -> Result<crate::GeometryMesh<Scalar>, crate::Error> {
+impl crate::build_mesh::BuildMesh for PointMeshBuilder {
+    fn build(self) -> Result<crate::GeometryMesh, crate::Error> {
         if self.points.is_empty() {
             Err(crate::Error::EmptyGeometry)
         } else {

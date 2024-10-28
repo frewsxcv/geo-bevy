@@ -1,4 +1,6 @@
 use bevy::prelude::Mesh;
+use geo_traits::CoordTrait;
+use num_traits::cast::ToPrimitive;
 
 type Vertex = [f32; 3]; // [x, y, z]
 
@@ -9,12 +11,16 @@ pub struct LineStringMeshBuilder {
 }
 
 impl LineStringMeshBuilder {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     /// Call for `add_earcutr_input` for each polygon you want to add to the mesh.
     /// Logs error if self.vertices.len() + linestring coords > u32::MAX (4_294_967_295).
-    pub fn add_line_string<Scalar, I>(&mut self, line_string_iter: I) -> Result<(), crate::Error>
+    pub fn add_coords<I, C>(&mut self, coords: I) -> Result<(), crate::Error>
     where
-        Scalar: geo::CoordFloat,
-        I: Iterator<Item = geo::Coord<Scalar>>,
+        I: Iterator<Item = C>,
+        C: CoordTrait,
     {
         let index_base = self.vertices.len();
 
@@ -23,10 +29,16 @@ impl LineStringMeshBuilder {
         self.indices.reserve(self.indices.len() * 2);
 
         let mut last_index = None;
-        for (i, coord) in line_string_iter.enumerate() {
+        for (i, coord) in coords.enumerate() {
             self.vertices.push([
-                coord.x.to_f32().ok_or(crate::Error::CouldNotConvertToF32)?,
-                coord.y.to_f32().ok_or(crate::Error::CouldNotConvertToF32)?,
+                coord
+                    .x()
+                    .to_f32()
+                    .ok_or(crate::Error::CouldNotConvertToF32)?,
+                coord
+                    .y()
+                    .to_f32()
+                    .ok_or(crate::Error::CouldNotConvertToF32)?,
                 0.0,
             ]);
 
@@ -69,8 +81,8 @@ impl TryFrom<LineStringMeshBuilder> for Mesh {
     }
 }
 
-impl<Scalar: geo::CoordFloat> crate::build_mesh::BuildMesh<Scalar> for LineStringMeshBuilder {
-    fn build(self) -> Result<crate::GeometryMesh<Scalar>, crate::Error> {
+impl crate::build_mesh::BuildMesh for LineStringMeshBuilder {
+    fn build(self) -> Result<crate::GeometryMesh, crate::Error> {
         Ok(crate::GeometryMesh::LineString(self.try_into()?))
     }
 }

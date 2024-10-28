@@ -1,9 +1,11 @@
 use bevy::prelude::{info_span, Mesh};
-use build_mesh::{BuildBevyMeshes, BuildMesh};
-use geo::geometry::*;
+use build_mesh::BuildMesh;
+use geo_traits::*;
 use line_string::LineStringMeshBuilder;
 use polygon::PolygonMeshBuilder;
+use std::iter;
 
+pub use point::SpritePosition;
 pub use polygon::PolygonMesh;
 
 mod build_mesh;
@@ -11,37 +13,42 @@ mod line_string;
 mod point;
 mod polygon;
 
-pub fn line_to_mesh(line: &Line) -> Result<Mesh, Error> {
-    line_string_to_mesh(&line.into())
-}
-
-pub fn line_string_to_mesh(line_string: &LineString) -> Result<Mesh, Error> {
-    let mut mesh_builder = LineStringMeshBuilder::default();
-    mesh_builder.add_line_string(line_string.coords().copied())?;
+pub fn line_to_mesh(line: impl LineTrait) -> Result<Mesh, Error> {
+    let mut mesh_builder = LineStringMeshBuilder::new();
+    mesh_builder.add_coords(iter::once(line.start()).chain(iter::once(line.end())))?;
     mesh_builder.try_into()
 }
 
-pub fn multi_line_string_to_mesh(multi_line_string: &MultiLineString) -> Result<Vec<Mesh>, Error> {
-    let line_strings = &multi_line_string.0;
-    let mut line_string_meshes = Vec::with_capacity(line_strings.len());
+pub fn line_string_to_mesh(line_string: impl LineStringTrait) -> Result<Mesh, Error> {
+    let mut mesh_builder = LineStringMeshBuilder::new();
+    mesh_builder.add_coords(line_string.coords())?;
+    mesh_builder.try_into()
+}
 
-    for line_string in line_strings {
+pub fn multi_line_string_to_mesh(
+    multi_line_string: impl MultiLineStringTrait,
+) -> Result<Vec<Mesh>, Error> {
+    let mut line_string_meshes = Vec::with_capacity(multi_line_string.num_line_strings());
+
+    for line_string in multi_line_string.line_strings() {
         line_string_meshes.push(line_string_to_mesh(line_string)?);
     }
 
     Ok(line_string_meshes)
 }
 
-pub fn polygon_to_mesh<Scalar: geo::CoordFloat>(
-    polygon: &Polygon<Scalar>,
+pub fn polygon_to_mesh<Scalar: geo_types::CoordFloat>(
+    polygon: impl PolygonTrait<T = Scalar>,
 ) -> Result<PolygonMesh, Error> {
-    let mut mesh_builder = PolygonMeshBuilder::default();
-    mesh_builder.add_polygon(polygon)?;
-    PolygonMesh::try_from(mesh_builder)
+    let mut mesh_builder = PolygonMeshBuilder::new();
+    mesh_builder.add_polygon(&polygon)?;
+    mesh_builder.try_into()
 }
 
-pub fn multi_polygon_to_mesh(multi_polygon: &MultiPolygon) -> Result<Vec<PolygonMesh>, Error> {
-    let polygons = &multi_polygon.0;
+pub fn multi_polygon_to_mesh<Scalar: geo_types::CoordFloat>(
+    multi_polygon: impl MultiPolygonTrait<T = Scalar>,
+) -> Result<Vec<PolygonMesh>, Error> {
+    let polygons = multi_polygon.polygons();
     let mut polygon_meshes = Vec::with_capacity(polygons.len());
     for polygon in polygons {
         polygon_meshes.push(polygon_to_mesh(polygon)?);
@@ -50,23 +57,46 @@ pub fn multi_polygon_to_mesh(multi_polygon: &MultiPolygon) -> Result<Vec<Polygon
     Ok(polygon_meshes)
 }
 
-pub fn rect_to_mesh<Scalar: geo::CoordFloat>(rect: &Rect<Scalar>) -> Result<PolygonMesh, Error> {
-    polygon_to_mesh(&rect.to_polygon())
-}
-
-pub fn triangle_to_mesh<Scalar: geo::CoordFloat>(
-    triangle: &Triangle<Scalar>,
+pub fn rect_to_mesh<Scalar: geo_types::CoordFloat>(
+    rect: impl RectTrait<T = Scalar>,
 ) -> Result<PolygonMesh, Error> {
-    polygon_to_mesh(&triangle.to_polygon())
+    let mut mesh_builder = PolygonMeshBuilder::default();
+    mesh_builder.add_polygon_from_exterior_coords(
+        [
+            (rect.min().x(), rect.min().y()),
+            (rect.min().x(), rect.max().y()),
+            (rect.max().x(), rect.max().y()),
+            (rect.max().x(), rect.min().y()),
+            (rect.min().x(), rect.min().y()),
+        ]
+        .into_iter(),
+    )?;
+    PolygonMesh::try_from(mesh_builder)
 }
 
-pub fn geometry_to_mesh<Scalar: geo::CoordFloat>(
-    geometry: &Geometry<Scalar>,
-) -> Result<GeometryMesh<Scalar>, Error> {
+pub fn triangle_to_mesh<Scalar: geo_types::CoordFloat>(
+    triangle: impl TriangleTrait<T = Scalar>,
+) -> Result<PolygonMesh, Error> {
+    let mut mesh_builder = PolygonMeshBuilder::default();
+    mesh_builder.add_polygon_from_exterior_coords(
+        [
+            (triangle.first().x(), triangle.first().y()),
+            (triangle.second().x(), triangle.second().y()),
+            (triangle.third().x(), triangle.third().y()),
+            (triangle.first().x(), triangle.first().y()),
+        ]
+        .into_iter(),
+    )?;
+    PolygonMesh::try_from(mesh_builder)
+}
+
+pub fn geometry_to_mesh<Scalar: geo_types::CoordFloat>(
+    geometry: impl GeometryTrait<T = Scalar>,
+) -> Result<GeometryMesh, Error> {
     let mut ctx = build_mesh::BuildBevyMeshesContext::default();
 
     info_span!("Populating Bevy mesh builder")
-        .in_scope(|| geometry.populate_mesh_builders(&mut ctx))?;
+        .in_scope(|| build_mesh::populate_geometry_mesh_builders(&geometry, &mut ctx))?;
 
     info_span!("Building Bevy meshes").in_scope(|| {
         [
@@ -80,19 +110,8 @@ pub fn geometry_to_mesh<Scalar: geo::CoordFloat>(
     })
 }
 
-pub fn geometry_collection_to_mesh<Scalar: geo::CoordFloat>(
-    geometry_collection: &GeometryCollection<Scalar>,
-) -> Result<Vec<GeometryMesh<Scalar>>, Error> {
-    let mut geometry_meshes = Vec::with_capacity(geometry_collection.len());
-    for geometry in geometry_collection {
-        geometry_meshes.push(geometry_to_mesh(geometry)?);
-    }
-
-    Ok(geometry_meshes)
-}
-
-pub enum GeometryMesh<Scalar: geo::CoordFloat> {
-    Point(Vec<Point<Scalar>>),
+pub enum GeometryMesh {
+    Point(Vec<SpritePosition>),
     LineString(Mesh),
     Polygon(polygon::PolygonMesh),
 }
