@@ -14,19 +14,19 @@ const I_3: [f64; 2] = [0.25, 0.75];
 
 #[test]
 pub fn builds_mesh_from_line() {
-    let mesh = line_to_mesh(&Line::new(P_0, P_1)).expect("Vertices.");
+    let mesh = line_to_mesh(Line::new(P_0, P_1)).expect("Vertices.");
     assert_eq!([P_0, P_1].as_slice(), mesh_to_indices(&mesh));
 }
 
 pub fn builds_no_mesh_from_emty_line() {
     let line = Line::new(P_0, P_0);
-    assert!(line_to_mesh(&line).is_err())
+    assert!(line_to_mesh(line).is_err())
 }
 
 #[test]
 pub fn builds_mesh_from_line_string() {
     let indices = vec![P_0, P_1, P_2];
-    let mesh = line_string_to_mesh(&LineString::new(
+    let mesh = line_string_to_mesh(LineString::new(
         indices.clone().into_iter().map(Coord::from).collect(),
     ))
     .expect("Vertices.");
@@ -36,7 +36,7 @@ pub fn builds_mesh_from_line_string() {
 #[test]
 pub fn builds_mesh_from_multi_line_string() {
     let indices = vec![P_0, P_1, P_2];
-    let meshes = multi_line_string_to_mesh(&MultiLineString::new(vec![indices.clone().into()]));
+    let meshes = multi_line_string_to_mesh(MultiLineString::new(vec![indices.clone().into()]));
     assert_eq!(indices, mesh_to_indices(meshes.unwrap().first().unwrap()));
 }
 
@@ -49,7 +49,7 @@ pub fn builds_mesh_from_polygon() {
         mesh,
         exterior_mesh,
         interior_meshes,
-    } = polygon_to_mesh(&Polygon::new(
+    } = polygon_to_mesh(Polygon::new(
         exterior_ring.clone().into(),
         vec![interior_ring.clone().into()],
     ))
@@ -64,7 +64,7 @@ pub fn builds_mesh_from_polygon() {
 pub fn builds_mesh_from_multi_polygon() {
     let exterior_ring = vec![P_0, P_1, P_2, P_3];
 
-    let polygon_meshes = multi_polygon_to_mesh(&MultiPolygon::new(vec![Polygon::new(
+    let polygon_meshes = multi_polygon_to_mesh(MultiPolygon::new(vec![Polygon::new(
         exterior_ring.clone().into(),
         vec![],
     )]));
@@ -77,7 +77,7 @@ pub fn builds_mesh_from_multi_polygon() {
 
 #[test]
 pub fn builds_mesh_from_rect() {
-    let PolygonMesh { mesh, .. } = rect_to_mesh(&Rect::new(P_0, P_2)).expect("Vertices");
+    let PolygonMesh { mesh, .. } = rect_to_mesh(Rect::new(P_0, P_2)).expect("Vertices");
     assert_eq!([P_0, P_3, P_2, P_1].as_slice(), mesh_to_indices(&mesh))
 }
 
