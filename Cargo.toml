@@ -1,15 +1,15 @@
 [package]
 name = "geo-bevy"
 description = "Generate Bevy meshes from `geo` types"
-version = "7.0.0"
+version = "8.0.0"
 authors = ["Corey Farwell <coreyf@rwell.org>"]
 edition = "2021"
 repository = "https://github.com/frewsxcv/geo-bevy"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-bevy-earcutr = "0.15"
-bevy = { version = "0.15.2", default-features = false,  features = ["bevy_render"] }
+bevy-earcutr = "1"
+bevy = { version = "0.16", default-features = false,  features = ["bevy_render", "bevy_log"] }
 geo-types = { version = "0.7", default-features = false }
 geo-traits = "0.1.0"
 num-traits = "0.2"
