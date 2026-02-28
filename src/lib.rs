@@ -5,6 +5,7 @@ use bevy::prelude::{info_span, Mesh};
 use build_mesh::BuildMesh;
 use geo_traits::*;
 use line_string::LineStringMeshBuilder;
+use num_traits::ToPrimitive;
 use polygon::PolygonMeshBuilder;
 use std::iter;
 
@@ -16,21 +17,30 @@ mod line_string;
 mod point;
 mod polygon;
 
-pub fn line_to_mesh(line: impl LineTrait) -> Result<Mesh, Error> {
+pub fn line_to_mesh<L: LineTrait>(line: L) -> Result<Mesh, Error>
+where
+    L::T: ToPrimitive,
+{
     let mut mesh_builder = LineStringMeshBuilder::new();
     mesh_builder.add_coords(iter::once(line.start()).chain(iter::once(line.end())))?;
     mesh_builder.try_into()
 }
 
-pub fn line_string_to_mesh(line_string: impl LineStringTrait) -> Result<Mesh, Error> {
+pub fn line_string_to_mesh<LS: LineStringTrait>(line_string: LS) -> Result<Mesh, Error>
+where
+    LS::T: ToPrimitive,
+{
     let mut mesh_builder = LineStringMeshBuilder::new();
     mesh_builder.add_coords(line_string.coords())?;
     mesh_builder.try_into()
 }
 
-pub fn multi_line_string_to_mesh(
-    multi_line_string: impl MultiLineStringTrait,
-) -> Result<Vec<Mesh>, Error> {
+pub fn multi_line_string_to_mesh<MLS: MultiLineStringTrait>(
+    multi_line_string: MLS,
+) -> Result<Vec<Mesh>, Error>
+where
+    MLS::T: ToPrimitive,
+{
     let mut line_string_meshes = Vec::with_capacity(multi_line_string.num_line_strings());
 
     for line_string in multi_line_string.line_strings() {

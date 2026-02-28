@@ -21,6 +21,7 @@ impl LineStringMeshBuilder {
     where
         I: Iterator<Item = C>,
         C: CoordTrait,
+        C::T: ToPrimitive,
     {
         let index_base = self.vertices.len();
 

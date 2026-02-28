@@ -14,7 +14,7 @@ pub struct PointMeshBuilder {
 
 impl PointMeshBuilder {
     /// Call for `add_earcutr_input` for each polygon you want to add to the mesh.
-    pub fn add_coord(&mut self, coord: impl CoordTrait) {
+    pub fn add_coord(&mut self, coord: impl CoordTrait<T: ToPrimitive>) {
         self.points.push(SpritePosition {
             x: coord.x().to_f32().unwrap(),
             y: coord.y().to_f32().unwrap(),
