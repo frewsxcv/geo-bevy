@@ -1,3 +1,6 @@
+// Workaround for https://github.com/rust-lang/rust/issues/128887
+#![recursion_limit = "256"]
+
 use bevy::prelude::{info_span, Mesh};
 use build_mesh::BuildMesh;
 use geo_traits::*;
