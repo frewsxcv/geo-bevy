@@ -1,4 +1,4 @@
-use bevy::{prelude::Mesh, render::mesh::VertexAttributeValues};
+use bevy::{prelude::Mesh, mesh::VertexAttributeValues};
 use geo_bevy::*;
 use geo_types::geometry::*;
 

@@ -68,7 +68,7 @@ impl TryFrom<LineStringMeshBuilder> for Mesh {
                 bevy::render::render_resource::PrimitiveTopology::LineList,
                 Default::default(),
             );
-            mesh.insert_indices(bevy::render::mesh::Indices::U32(indices));
+            mesh.insert_indices(bevy::mesh::Indices::U32(indices));
             mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vertices);
 
             let normals = vec![[0.0, 0.0, 0.0]; num_vertices];
